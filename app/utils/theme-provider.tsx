@@ -40,7 +40,6 @@ function ThemeProvider({ children, specifiedTheme }: { children: ReactNode, spec
       return;
     }
 
-    console.log('go');
     persistThemeRef.current.submit({ theme }, { action: 'set-theme', method: 'post' });
   }, [theme]);
 

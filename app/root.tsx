@@ -1,23 +1,25 @@
 import React from "react";
 import {
-  Link,
   Links,
   Meta,
   Outlet,
   Scripts,
-  useLoaderData,
-  useMatches,
+  useLoaderData
 } from "@remix-run/react";
 import {Navbar, NavbarBrand, NavbarContent, NavbarItem, NextUIProvider} from "@nextui-org/react"
 import type { LinksFunction, LoaderFunction } from "@remix-run/node";
-import { ThemeScript, ThemeProvider, Theme, useTheme } from "./utils/theme-provider";
-import { DarkModeButton } from "./components/dark-mode-button";
-import { getThemeSession } from "./utils/theme.server";
+import { ThemeScript, ThemeProvider, Theme, useTheme } from "./utils/theme-provider.jsx";
+import { DarkModeButton } from "./components/dark-mode-button.jsx";
+import { getThemeSession } from "./utils/theme.server.js";
 // @ts-expect-error
-import stylesheet from "~/tailwind.css?url";
+import tailwindStyles from "~/styles/tailwind.css?url";
+import { MainNavItem } from "./components/main-nav-item.jsx";
+// @ts-expect-error
+import markdownStyles from "~/styles/markdown.css?url";
 
 export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: stylesheet },
+  { rel: "stylesheet", href: tailwindStyles },
+  { rel: "stylesheet", href: markdownStyles },
 ];
 
 export type LoaderData = {
@@ -36,15 +38,9 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 export default function App() {
   const {theme} = useLoaderData<LoaderData>();
-
-  const matches = useMatches();
-
-  const isActive = (to) => {
-    return matches.some(match => match.pathname === to);
-  };
   
   return (
-    <html className={`text-foreground bg-background ${theme}`}>
+    <html className={`h-full bg-gradient-to-b from-transparent to-background-secondary bg-fixed text-foreground bg-background ${theme}`}>
       <head>
         <link
           rel="icon"
@@ -57,21 +53,13 @@ export default function App() {
       <body>
         <NextUIProvider>
           <ThemeProvider specifiedTheme={theme}>
-            <Navbar>
+            <Navbar className="bg-transparent">
               <NavbarBrand>
                 <p className="font-bold text-inherit">Quarter</p>
               </NavbarBrand>
               <NavbarContent className="hidden sm:flex gap-4" justify="center">
-                <NavbarItem isActive={isActive('/')}>
-                  <Link to="/">
-                    Demo
-                  </Link>
-                </NavbarItem>
-                <NavbarItem isActive={isActive('/about')}>
-                  <Link to="/about" color=" ">
-                    How It Works
-                  </Link>
-                </NavbarItem>
+                <MainNavItem text="Demo" to="/" />
+                <MainNavItem text="How It Works" to="/about" />
               </NavbarContent>
               <NavbarContent justify="end">
                 <NavbarItem>
@@ -79,7 +67,7 @@ export default function App() {
                 </NavbarItem>
               </NavbarContent>
             </Navbar>
-            <div className="container mx-auto px-4">
+            <div className="mx-auto px-4 max-w-2xl">
               <Outlet />
             </div>
             <Scripts />

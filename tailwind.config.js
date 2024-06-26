@@ -13,26 +13,14 @@ module.exports = {
   darkMode: "class",
   plugins: [nextui({
     themes: {
-      light: {},
+      light: {
+        colors: {
+          'background-secondary': 'hsl(212, 100%, 90%)'
+        }
+      },
       dark: {
         colors: {
-          content1: 'red',
-          primary: 'red',
-          focus: 'red',
-          content2: 'red',
-          content3: 'red',
-          content4: 'red',
-
-          
-          secondary: 'red',
-
-          success: 'red',
-
-          overlay: 'red',
-
-          danger: 'red',
-          divider: 'red',
-          activeNavItem: 'red'
+          'background-secondary': 'hsl(212, 100%, 20%)'
         }
       }
     }

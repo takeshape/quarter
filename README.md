@@ -6,7 +6,7 @@ Less is more
 
 ### Initial Setup
 
-Create a `.env` in the project rootlike this one:
+Create a `.env` in the project root like this one:
 
 ```
 SESSION_SECRET=change me to a random secret string

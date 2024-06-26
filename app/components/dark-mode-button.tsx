@@ -1,5 +1,5 @@
 import { Button } from "@nextui-org/react";
-import { Theme, useTheme } from "../utils/theme-provider";
+import { Theme, useTheme } from "../utils/theme-provider.jsx";
 import React from "react";
 
 export function DarkModeButton() {
