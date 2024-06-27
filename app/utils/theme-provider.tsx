@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import { DEFAULT_THEME, Theme } from './theme';
+import { DEFAULT_THEME, Theme } from './theme.ts';
 import { useFetcher } from '@remix-run/react';
 
 type ThemeContextType = [Theme | null, Dispatch<SetStateAction<Theme | null>>];

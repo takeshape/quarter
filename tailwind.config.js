@@ -15,7 +15,7 @@ module.exports = {
     themes: {
       light: {
         colors: {
-          'background-secondary': 'hsl(212, 100%, 90%)'
+          'background-secondary': 'hsl(150, 100%, 90%)'
         }
       },
       dark: {

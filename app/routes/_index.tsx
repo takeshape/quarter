@@ -1,84 +1,181 @@
-import {
-  codeBlockLookBack,
-  findCompleteCodeBlock,
-  findPartialCodeBlock,
-} from "@llm-ui/code";
-import { markdownLookBack } from "@llm-ui/markdown";
-import { useLLMOutput, useStreamExample } from "@llm-ui/react";
-import { MarkdownComponent } from "../components/llm/markdown-component.jsx";
-import { CodeBlock } from "../components/llm/code-block.jsx";
-import { CircularProgress } from "@nextui-org/react";
+import { Button, CircularProgress, Navbar } from "@nextui-org/react";
+import {Input} from "@nextui-org/input";
+import React from "react";
+import { Form, json, useActionData } from "@remix-run/react";
+import { ActionFunction } from "@remix-run/node";
+import { LLMOutput } from "../components/llm-output.tsx";
 
-const example = `## Some Cool Functions
-
-\`\`\`typescript
-function fibonacci(n: number): number {
-    if (n <= 1) return n;
-    return fibonacci(n - 1) + fibonacci(n - 2);
+const query = `
+query ($input:String!, $sessionId: String) {
+  chat(input:$input, sessionId: $sessionId) {
+    content
+    sessionId
+  }
 }
-
-console.log(fibonacci(10)); // Output: 55
-\`\`\`
-...continues...
-\`\`\`typescript
-function isPalindrome(str: string): boolean {
-    const reversed = str.split('').reverse().join('');
-    return str === reversed;
-}
-
-console.log(isPalindrome("racecar")); // Output: true
-console.log(isPalindrome("hello"));   // Output: false
-\`\`\`
-...continues...
-\`\`\`typescript
-function isPrime(n: number): boolean {
-    if (n <= 1) return false;
-    if (n <= 3) return true;
-    if (n % 2 === 0 || n % 3 === 0) return false;
-    
-    for (let i = 5; i * i <= n; i += 6) {
-        if (n % i === 0 || n % (i + 2) === 0) return false;
-    }
-    
-    return true;
-}
-
-console.log(isPrime(11)); // Output: true
-console.log(isPrime(15)); // Output: false
-\`\`\`
-...continues...
 `;
 
-export default function About() {
-  const { isStreamFinished, output } = useStreamExample(example);
+type LoaderResponse = {
+  success: boolean;
+  output?: {
+    chat: {
+      content: string;
+      sessionId: string;
+    }
+  } | null;
+  isStreamFinished?: boolean;
+  error?: string;
+}
 
-  const { blockMatches } = useLLMOutput({
-    llmOutput: output,
-    fallbackBlock: {
-      component: MarkdownComponent,
-      lookBack: markdownLookBack(),
+export const action: ActionFunction = async ({request}) => {
+  const formData = await request.formData();
+
+  const takeshapeDomain = process.env.TAKESHAPE_DOMAIN;
+  if (!takeshapeDomain) {
+    throw new Error('TAKESHAPE_DOMAIN must be set');
+  }
+
+  const projectId = process.env.TAKESHAPE_PROJECT_ID;
+  if (!projectId) {
+    throw new Error('TAKESHAPE_PROJECT_ID must be set');
+  }
+
+  const apiKey = process.env.TAKESHAPE_API_KEY;
+  if (!apiKey) {
+    throw new Error('TAKESHAPE_API_KEY must be set');
+  }
+
+  const message = formData.get('message');
+  const sessionId = formData.get('sessionId');
+
+  if (message === null) {
+    return json({
+      success: true,
+      output: null,
+      isStreamFinished: true
+    })
+  }
+
+  const response = await fetch(`https://${takeshapeDomain}/project/${projectId}/graphql`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
     },
-    blocks: [
-      {
-        component: CodeBlock,
-        findCompleteMatch: findCompleteCodeBlock(),
-        findPartialMatch: findPartialCodeBlock(),
-        lookBack: codeBlockLookBack(),
-      },
-    ],
-    isStreamFinished,
+    body: JSON.stringify({
+      query,
+      variables: {
+        input: message,
+        sessionId: sessionId === '' ? undefined : sessionId
+      }
+    })
   });
 
+  if (response.status !== 200) {
+    console.error(response);
+    return json({success: false, error: `HTTP Status Code ${response.status}`});
+  }
+
+  const responseJson = await response.json();
+
+  if (responseJson.errors?.length > 0) {
+    console.error(response);
+    return json({success: false, error: responseJson.errors[0].message});
+  }
+
+  const result = { success: true, output: responseJson.data, isStreamFinished: true };
+
+  return json(result);
+};
+
+export default function About() {
+  const data = useActionData<LoaderResponse>();
+
+  const sessionId = data?.output?.chat?.sessionId ?? '';
+  const output = data?.output?.chat?.content ?? '';
+  const isStreamFinished = data?.isStreamFinished;
+  
+  const [inputText, setInputText] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [history, setHistory] = React.useState([]);
+
+  React.useEffect(() => {
+    setLoading(false);
+    setTimeout(() => {
+      inputRef.current.focus();
+    }, 0);
+  }, [data]);
+
+  const inputRef = React.useRef(null);
+
+  const submitChat = React.useCallback(() => {
+    setLoading(true);
+    const newHistory = history;
+    if (output) {
+      newHistory.push({
+        type: 'llm',
+        value: output,
+        isStreamFinished
+      });
+    }
+    newHistory.push({
+      type: 'user',
+      value: inputText
+    });
+    setInputText('');
+    setHistory(newHistory);
+  }, [inputText]);
+
+  const changeMessage = React.useCallback((e) => {
+    setInputText(e.target.value);
+  }, []);
+
+  if (data?.success === false) {
+    return <div className={`mx-auto px-4 max-w-2xl text-red-600`}>{data.error}</div>
+  }
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-4">AI Chat with TakeShape</h1>
-      <div className="markdown">
-        {blockMatches.length === 0 && <div className="flex justify-center mt-8"><CircularProgress/></div>}
-        {blockMatches.map((blockMatch, index) => {
-          const Component = blockMatch.block.component;
-          return <Component key={index} blockMatch={blockMatch} />;
-        })}
+    <>
+      <div className={`mx-auto px-4 max-w-2xl mb-32`}>
+        {history.map((item, index) => 
+          <div key={`item-${index}`}>
+            {item.type === 'user' && <div className="my-8 text-right"><span className="bg-background-secondary p-3 rounded-xl">{item.value}</span></div>}
+            {item.type === 'llm' && <LLMOutput llmOutput={item.value} isStreamFinished={item.isStreamFinished}/>}
+          </div>
+        )}
+        {!loading && <LLMOutput llmOutput={output} isStreamFinished={isStreamFinished}/>}
+        {loading && <div className="flex justify-center mt-8"><CircularProgress/></div>}
       </div>
-    </div>
+      <Navbar className={`bg-background-secondary fixed bottom-0 top-auto item h-32`} isBlurred={false}>
+        <Form method="post" className="w-full" onSubmit={submitChat}>
+          <input type="hidden" name="sessionId" value={sessionId} />
+          <Input
+            name="message"
+            size="lg"
+            fullWidth
+            placeholder="Message"
+            value={inputText}
+            onChange={changeMessage}
+            classNames={{
+              inputWrapper: "pr-0"
+            }}
+            disabled={loading}
+            ref={inputRef}
+            endContent={
+              <Button
+                isIconOnly
+                type="submit"
+                variant="light"
+                disabled={loading}
+                aria-label="Input"
+              >
+                <svg className="fill-transparent stroke-neutral-600 dark:stroke-neutral-300 w-6" width="800px" height="800px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.5003 12H5.41872M5.24634 12.7972L4.24158 15.7986C3.69128 17.4424 3.41613 18.2643 3.61359 18.7704C3.78506 19.21 4.15335 19.5432 4.6078 19.6701C5.13111 19.8161 5.92151 19.4604 7.50231 18.7491L17.6367 14.1886C19.1797 13.4942 19.9512 13.1471 20.1896 12.6648C20.3968 12.2458 20.3968 11.7541 20.1896 11.3351C19.9512 10.8529 19.1797 10.5057 17.6367 9.81135L7.48483 5.24303C5.90879 4.53382 5.12078 4.17921 4.59799 4.32468C4.14397 4.45101 3.77572 4.78336 3.60365 5.22209C3.40551 5.72728 3.67772 6.54741 4.22215 8.18767L5.24829 11.2793C5.34179 11.561 5.38855 11.7019 5.407 11.8459C5.42338 11.9738 5.42321 12.1032 5.40651 12.231C5.38768 12.375 5.34057 12.5157 5.24634 12.7972Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Button>
+            }
+          />
+        </Form>
+      </Navbar>
+    </>
   );
 }

@@ -2,10 +2,11 @@
 
 import { createCookieSessionStorage } from '@remix-run/node';
 import 'dotenv/config';
-import {Theme, isTheme } from './theme-provider';
-import { DEFAULT_THEME } from './theme';
+import {Theme, isTheme } from './theme-provider.tsx';
+import { DEFAULT_THEME } from './theme.ts';
 
 const sessionSecret = process.env.SESSION_SECRET;
+
 if (!sessionSecret) {
   throw new Error('SESSION_SECRET must be set');
 }

@@ -4,9 +4,10 @@ import {
   Meta,
   Outlet,
   Scripts,
-  useLoaderData
+  useLoaderData,
+  useNavigation
 } from "@remix-run/react";
-import {Navbar, NavbarBrand, NavbarContent, NavbarItem, NextUIProvider} from "@nextui-org/react"
+import {CircularProgress, Navbar, NavbarBrand, NavbarContent, NavbarItem, NextUIProvider} from "@nextui-org/react"
 import type { LinksFunction, LoaderFunction } from "@remix-run/node";
 import { ThemeScript, ThemeProvider, Theme, useTheme } from "./utils/theme-provider.jsx";
 import { DarkModeButton } from "./components/dark-mode-button.jsx";
@@ -38,9 +39,9 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 export default function App() {
   const {theme} = useLoaderData<LoaderData>();
-  
+
   return (
-    <html className={`h-full bg-gradient-to-b from-transparent to-background-secondary bg-fixed text-foreground bg-background ${theme}`}>
+    <html className={`h-full bg-gradient-to-b from-transparent via-background-secondary via-80% to-background-secondary bg-fixed text-foreground bg-background ${theme}`}>
       <head>
         <link
           rel="icon"
@@ -67,7 +68,7 @@ export default function App() {
                 </NavbarItem>
               </NavbarContent>
             </Navbar>
-            <div className="mx-auto px-4 max-w-2xl">
+            <div className="mt-4">
               <Outlet />
             </div>
             <Scripts />
