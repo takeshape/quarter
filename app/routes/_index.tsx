@@ -4,6 +4,7 @@ import React from "react";
 import { Form, json, useActionData } from "@remix-run/react";
 import { ActionFunction } from "@remix-run/node";
 import { LLMOutput } from "../components/llm-output.tsx";
+import { ChatBubble } from "../components/chat-bubble.tsx";
 
 const query = `
 query ($input:String!, $sessionId: String) {
@@ -87,8 +88,10 @@ export const action: ActionFunction = async ({request}) => {
   return json(result);
 };
 
-export default function About() {
+export default function Demo() {
   const data = useActionData<LoaderResponse>();
+
+  console.log('### data', data);
 
   const sessionId = data?.output?.chat?.sessionId ?? '';
   const output = data?.output?.chat?.content ?? '';
@@ -98,18 +101,49 @@ export default function About() {
   const [loading, setLoading] = React.useState(false);
   const [history, setHistory] = React.useState([]);
 
+  const scrolledToBottomRef = React.useRef(true);
+
+  const handleScroll = React.useCallback(() => {
+    const scrollTop = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    if (scrollTop + windowHeight >= documentHeight) {
+      scrolledToBottomRef.current = true;
+    } else {
+      scrolledToBottomRef.current = false;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   React.useEffect(() => {
     setLoading(false);
     setTimeout(() => {
-      inputRef.current.focus();
+      inputRef.current?.focus();
     }, 0);
+    handleScroll();
+    if (scrolledToBottomRef.current) {
+      window.setTimeout(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      }, 0);
+    }
   }, [data]);
+
+  React.useEffect(() => {
+    window.scrollTo(0, document.body.scrollHeight);
+  }, [history]);
 
   const inputRef = React.useRef(null);
 
   const submitChat = React.useCallback(() => {
     setLoading(true);
-    const newHistory = history;
+    const newHistory = [...history];
+    console.log('### output', data, output);
     if (output) {
       newHistory.push({
         type: 'llm',
@@ -138,14 +172,14 @@ export default function About() {
       <div className={`mx-auto px-4 max-w-2xl mb-32`}>
         {history.map((item, index) => 
           <div key={`item-${index}`}>
-            {item.type === 'user' && <div className="my-8 text-right"><span className="bg-background-secondary p-3 rounded-xl">{item.value}</span></div>}
+            {item.type === 'user' && <ChatBubble text={item.value}/>}
             {item.type === 'llm' && <LLMOutput llmOutput={item.value} isStreamFinished={item.isStreamFinished}/>}
           </div>
         )}
         {!loading && <LLMOutput llmOutput={output} isStreamFinished={isStreamFinished}/>}
         {loading && <div className="flex justify-center mt-8"><CircularProgress/></div>}
       </div>
-      <Navbar className={`bg-background-secondary fixed bottom-0 top-auto item h-32`} isBlurred={false}>
+      <Navbar className={`bg-chat-bg fixed bottom-0 top-auto item h-32`} isBlurred={false}>
         <Form method="post" className="w-full" onSubmit={submitChat}>
           <input type="hidden" name="sessionId" value={sessionId} />
           <Input

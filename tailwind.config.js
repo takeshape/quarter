@@ -15,12 +15,12 @@ module.exports = {
     themes: {
       light: {
         colors: {
-          'background-secondary': 'hsl(150, 100%, 90%)'
+          'chat-bg': 'hsl(150, 100%, 90%)'
         }
       },
       dark: {
         colors: {
-          'background-secondary': 'hsl(212, 100%, 20%)'
+          'chat-bg': 'hsl(212, 100%, 20%)'
         }
       }
     }

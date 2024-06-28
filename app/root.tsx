@@ -41,7 +41,7 @@ export default function App() {
   const {theme} = useLoaderData<LoaderData>();
 
   return (
-    <html className={`h-full bg-gradient-to-b from-transparent via-background-secondary via-80% to-background-secondary bg-fixed text-foreground bg-background ${theme}`}>
+    <html className={`h-full bg-gradient-to-b from-transparent via-chat-bg via-80% to-chat-bg bg-fixed text-foreground ${theme}`}>
       <head>
         <link
           rel="icon"
@@ -51,7 +51,7 @@ export default function App() {
         <Links />
         <ThemeScript ssrTheme={Boolean(theme)}/>
       </head>
-      <body>
+      <body >
         <NextUIProvider>
           <ThemeProvider specifiedTheme={theme}>
             <Navbar className="bg-transparent">
