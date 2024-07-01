@@ -91,8 +91,6 @@ export const action: ActionFunction = async ({request}) => {
 export default function Demo() {
   const data = useActionData<LoaderResponse>();
 
-  console.log('### data', data);
-
   const sessionId = data?.output?.chat?.sessionId ?? '';
   const output = data?.output?.chat?.content ?? '';
   const isStreamFinished = data?.isStreamFinished;
@@ -140,10 +138,14 @@ export default function Demo() {
 
   const inputRef = React.useRef(null);
 
-  const submitChat = React.useCallback(() => {
+  const submitChat = React.useCallback((event) => {
+    if (inputText.trim() === '') {
+      console.log('no');
+      event.preventDefault();
+      return;
+    }
     setLoading(true);
     const newHistory = [...history];
-    console.log('### output', data, output);
     if (output) {
       newHistory.push({
         type: 'llm',
