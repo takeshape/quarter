@@ -4,19 +4,18 @@ import {
   Meta,
   Outlet,
   Scripts,
-  useLoaderData,
-  useNavigation
+  useLoaderData
 } from "@remix-run/react";
-import {CircularProgress, Navbar, NavbarBrand, NavbarContent, NavbarItem, NextUIProvider} from "@nextui-org/react"
+import {Navbar, NavbarBrand, NavbarContent, NavbarItem, NextUIProvider} from "@nextui-org/react"
 import type { LinksFunction, LoaderFunction } from "@remix-run/node";
-import { ThemeScript, ThemeProvider, Theme, useTheme } from "./utils/theme-provider.jsx";
+import { ThemeScript, ThemeProvider, Theme } from "./utils/theme-provider.jsx";
 import { DarkModeButton } from "./components/dark-mode-button.jsx";
 import { getThemeSession } from "./utils/theme.server.js";
-// @ts-expect-error
 import tailwindStyles from "~/styles/tailwind.css?url";
 import { MainNavItem } from "./components/main-nav-item.jsx";
-// @ts-expect-error
 import markdownStyles from "~/styles/markdown.css?url";
+import logo from "./images/logo.png";
+import logoDark from "./images/logo-dark.png";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: tailwindStyles },
@@ -41,7 +40,7 @@ export default function App() {
   const {theme} = useLoaderData<LoaderData>();
 
   return (
-    <html className={`h-full bg-gradient-to-b from-transparent via-chat-bg via-80% to-chat-bg bg-fixed text-foreground ${theme}`}>
+    <html className={`h-full text-foreground ${theme}`}>
       <head>
         <link
           rel="icon"
@@ -54,9 +53,9 @@ export default function App() {
       <body >
         <NextUIProvider>
           <ThemeProvider specifiedTheme={theme}>
-            <Navbar className="bg-transparent">
+            <Navbar  className="bg-transparent">
               <NavbarBrand>
-                <p className="font-bold text-inherit">Quarter</p>
+                <img src={theme === 'light' ? logo : logoDark} alt="Valvoline" className="h-16"/>
               </NavbarBrand>
               <NavbarContent className="hidden sm:flex gap-4" justify="center">
                 <MainNavItem text="Demo" to="/" />

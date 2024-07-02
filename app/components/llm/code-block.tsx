@@ -10,7 +10,7 @@ import {
 // see: https://llm-ui.com/docs/blocks/code#bundle-size
 import { bundledThemes } from "shiki/themes";
 import { type LLMOutputComponent } from "@llm-ui/react";
-import parseHtml from "html-react-parser";
+import ReactHtmlParser from "html-react-parser";
 import { getHighlighterCore } from "shiki/core";
 import { bundledLanguagesInfo } from "shiki/langs";
 
@@ -46,6 +46,5 @@ export const CodeBlock: LLMOutputComponent = ({ blockMatch }) => {
       </pre>
     );
   }
-  // @ts-expect-error
-  return <Code className="my-4 p-2 w-full" style={{backgroundColor: theme === 'dark' ? "rgb(36, 41, 46)" : "rgb(255, 255, 255)"}}>{parseHtml(html)}</Code>;
+  return <Code className="my-4 p-2 w-full" style={{backgroundColor: theme === 'dark' ? "rgb(36, 41, 46)" : "rgb(255, 255, 255)"}}>{ReactHtmlParser(html)}</Code>;
 };

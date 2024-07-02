@@ -3,4 +3,4 @@ export enum Theme {
   LIGHT = 'light',
 }
 
-export const DEFAULT_THEME = Theme.DARK;
+export const DEFAULT_THEME = Theme.LIGHT;

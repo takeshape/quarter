@@ -171,7 +171,7 @@ export default function Demo() {
 
   return (
     <>
-      <div className={`mx-auto px-4 max-w-2xl mb-32`}>
+      <div className={`mx-auto px-4 max-w-2xl pb-36`}>
         {history.map((item, index) => 
           <div key={`item-${index}`}>
             {item.type === 'user' && <ChatBubble text={item.value}/>}
@@ -181,7 +181,7 @@ export default function Demo() {
         {!loading && <LLMOutput llmOutput={output} isStreamFinished={isStreamFinished}/>}
         {loading && <div className="flex justify-center mt-8"><CircularProgress/></div>}
       </div>
-      <Navbar className={`bg-chat-bg fixed bottom-0 top-auto item h-32`} isBlurred={false}>
+      <Navbar className={`bg-input-bg fixed bottom-0 top-auto item h-32`} isBlurred={false}>
         <Form method="post" className="w-full" onSubmit={submitChat}>
           <input type="hidden" name="sessionId" value={sessionId} />
           <Input
