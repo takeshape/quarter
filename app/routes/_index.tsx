@@ -15,7 +15,7 @@ query ($input:String!, $sessionId: String) {
 }
 `;
 
-type LoaderResponse = {
+type ActionResponse = {
   success: boolean;
   output?: {
     chat: {
@@ -89,7 +89,7 @@ export const action: ActionFunction = async ({request}) => {
 };
 
 export default function Demo() {
-  const data = useActionData<LoaderResponse>();
+  const data = useActionData<ActionResponse>();
 
   const sessionId = data?.output?.chat?.sessionId ?? '';
   const output = data?.output?.chat?.content ?? '';
