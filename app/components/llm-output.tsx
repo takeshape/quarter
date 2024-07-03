@@ -24,9 +24,7 @@ export function LLMOutput({llmOutput, isStreamFinished}: {llmOutput: string, isS
       {
         component: Product,
         findCompleteMatch: (str) => {
-          console.log('1', str);
-          const execResult = (/Product ID: \S+/gd).exec(str);
-          console.log('1.1', execResult);
+          const execResult = (/gid:\/\/shopify\/Product\/\d+/gd).exec(str);
           if (execResult) {
             const firstResult = execResult.indices[0];
             
@@ -38,7 +36,6 @@ export function LLMOutput({llmOutput, isStreamFinished}: {llmOutput: string, isS
           }
         },
         findPartialMatch: (str) => {
-          console.log('2', str);
           return undefined;
           // return {
           //   startIndex: 0,
@@ -47,7 +44,6 @@ export function LLMOutput({llmOutput, isStreamFinished}: {llmOutput: string, isS
           // }
         },
         lookBack: (args) => {
-          console.log('3', args);
           const {output, isComplete, visibleTextLengthTarget, isStreamFinished} = args;
           return {
             output: output,

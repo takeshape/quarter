@@ -140,7 +140,6 @@ export default function Demo() {
 
   const submitChat = React.useCallback((event) => {
     if (inputText.trim() === '') {
-      console.log('no');
       event.preventDefault();
       return;
     }

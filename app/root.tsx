@@ -16,6 +16,9 @@ import { MainNavItem } from "./components/main-nav-item.jsx";
 import markdownStyles from "~/styles/markdown.css?url";
 import logo from "./images/logo.png";
 import logoDark from "./images/logo-dark.png";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: tailwindStyles },
@@ -53,24 +56,26 @@ export default function App() {
       <body >
         <NextUIProvider>
           <ThemeProvider specifiedTheme={theme}>
-            <Navbar  className="bg-transparent">
-              <NavbarBrand>
-                <img src={theme === 'light' ? logo : logoDark} alt="Valvoline" className="h-16"/>
-              </NavbarBrand>
-              <NavbarContent className="hidden sm:flex gap-4" justify="center">
-                <MainNavItem text="Demo" to="/" />
-                <MainNavItem text="How It Works" to="/about" />
-              </NavbarContent>
-              <NavbarContent justify="end">
-                <NavbarItem>
-                  <DarkModeButton />
-                </NavbarItem>
-              </NavbarContent>
-            </Navbar>
-            <div className="mt-4">
-              <Outlet />
-            </div>
-            <Scripts />
+            <QueryClientProvider client={queryClient}>
+              <Navbar  className="bg-transparent">
+                <NavbarBrand>
+                  <img src={theme === 'light' ? logo : logoDark} alt="Valvoline" className="h-16"/>
+                </NavbarBrand>
+                <NavbarContent className="hidden sm:flex gap-4" justify="center">
+                  <MainNavItem text="Demo" to="/" />
+                  <MainNavItem text="How It Works" to="/about" />
+                </NavbarContent>
+                <NavbarContent justify="end">
+                  <NavbarItem>
+                    <DarkModeButton />
+                  </NavbarItem>
+                </NavbarContent>
+              </Navbar>
+              <div className="mt-4">
+                <Outlet />
+              </div>
+              <Scripts />
+            </QueryClientProvider>
           </ThemeProvider>
         </NextUIProvider>
       </body>
