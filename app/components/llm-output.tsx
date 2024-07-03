@@ -37,11 +37,6 @@ export function LLMOutput({llmOutput, isStreamFinished}: {llmOutput: string, isS
         },
         findPartialMatch: (str) => {
           return undefined;
-          // return {
-          //   startIndex: 0,
-          //   endIndex: 1,
-          //   outputRaw: 'hi'
-          // }
         },
         lookBack: (args) => {
           const {output, isComplete, visibleTextLengthTarget, isStreamFinished} = args;
