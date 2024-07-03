@@ -1,11 +1,9 @@
 import { type LLMOutputComponent } from "@llm-ui/react";
-import { Button, Card, CardFooter, CircularProgress, Image, Skeleton } from "@nextui-org/react";
-import productExample from "../../images/product-example.png";
+import { Button, Card, CardBody, Image, Skeleton } from "@nextui-org/react";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { ConfigContext } from "../../root.tsx";
 
-// TODO
 const query = `
 query ($id: ID!) {
   Shopify_product(id: $id) {
@@ -47,7 +45,6 @@ export const Product: LLMOutputComponent = ({ blockMatch }) => {
         })
       });
       const json = await result.json();
-      console.log('json', json);
       return json.data.Shopify_product;
     },
   });
@@ -55,40 +52,46 @@ export const Product: LLMOutputComponent = ({ blockMatch }) => {
   if (isError) {
     return <>Error fetching product details</>;
   }
+  
+  return <Card
+    isBlurred
+    className="border-none bg-background/60 dark:bg-default-100/50 w-full my-4 h-50"
+    shadow="sm"
+  >
+    <CardBody>
+      <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center">
+        <div className="relative col-span-6 md:col-span-4">
+          {data ?
+            <Image
+              alt={data.featuredImage.altText}
+              src={data.featuredImage.url}
+              className="object-contain h-44 w-44 bg-white"
+              shadow="md"
+            /> :
+            <Skeleton className="rounded-lg w-44 h-44">
+              <div className="rounded-lg"></div>
+            </Skeleton>
+          }
+        </div>
 
-  if (!data) {
-    return <Card className="w-[200px] space-y-5 p-4" radius="lg">
-    <Skeleton className="rounded-lg">
-      <div className="h-24 rounded-lg bg-default-300"></div>
-    </Skeleton>
-    <div className="space-y-3">
-      <Skeleton className="w-3/5 rounded-lg">
-        <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
-      </Skeleton>
-      <Skeleton className="w-4/5 rounded-lg">
-        <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
-      </Skeleton>
-      <Skeleton className="w-2/5 rounded-lg">  
-        <div className="h-3 w-2/5 rounded-lg bg-default-300"></div>
-      </Skeleton>
-    </div>
-  </Card>;
-  }
-
-  return <Card isFooterBlurred className="w-ful h-64 my-4">
-    <Image
-      removeWrapper
-      alt={data.featuredImage.altText}
-      className="z-0 w-full h-full object-cover"
-      src={data.featuredImage.url}
-    />
-    <CardFooter className="absolute bg-white/60 dark:bg-black/60 bottom-0 z-10 border-t-1 border-default-200 dark:border-default-100">
-      <div className="flex flex-grow gap-2">
-        <div className="flex flex-col">
-          <p className="!mb-0 font-semibold">{data.title}</p>
+        <div className="flex flex-col col-span-6 md:col-span-6">
+          {data ? <>
+            <h3 className="font-semibold !mt-0">{data.title}</h3>
+            <Button>Add To Cart</Button>
+          </> :
+            <div className="space-y-3">
+              <Skeleton className="w-3/5 rounded-lg">
+                <div className="h-3 w-3/5 "></div>
+              </Skeleton>
+              <Skeleton className="w-4/5 rounded-lg">
+                <div className="h-3 w-4/5"></div>
+              </Skeleton>
+              <Skeleton className="w-2/5 rounded-lg">  
+                <div className="h-3 w-2/5"></div>
+              </Skeleton>
+            </div>}
         </div>
       </div>
-      <Button radius="full" size="sm">Add To Cart</Button>
-    </CardFooter>
+    </CardBody>
   </Card>
 };

@@ -41,7 +41,6 @@ export default function Demo() {
         })
       });
       const json = await result.json();
-      console.log('json', json);
 
       if (json.errors?.length > 0) {
         throw new Error(json.errors[0].message);
@@ -72,10 +71,11 @@ export default function Demo() {
   const isStreamFinished = data?.isStreamFinished;
 
   const handleScroll = React.useCallback(() => {
+    const errorMargin = 5;
     const scrollTop = window.scrollY;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
-    if (scrollTop + windowHeight >= documentHeight) {
+    if (scrollTop + windowHeight + errorMargin >= documentHeight) {
       scrolledToBottomRef.current = true;
     } else {
       scrolledToBottomRef.current = false;
