@@ -1,5 +1,3 @@
-
-
 import {
   loadHighlighter,
   useCodeBlockToHtml,
@@ -27,7 +25,6 @@ const highlighter = loadHighlighter(
   }),
 );
 
-// Customize this component with your own styling
 export const CodeBlock: LLMOutputComponent = ({ blockMatch }) => {
   const [theme] = useTheme();
   const { html, code } = useCodeBlockToHtml({

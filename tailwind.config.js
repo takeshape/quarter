@@ -25,7 +25,7 @@ module.exports = {
         colors: {
           'primary': 'rgb(7, 139, 199)',
           'input-bg': 'hsl(240, 4%, 30%)',
-          'message-bg': 'hsl(240, 4%, 30%)',
+          'message-bg': 'rgb(0, 49, 109)',
           'header-link': 'hsl(0, 0%, 85%)'
         }
       }

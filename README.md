@@ -9,10 +9,12 @@ Less is more
 Create a `.env` in the project root like this one:
 
 ```
+# Server-only (secrets)
 SESSION_SECRET=change me to a random secret string
-TAKESHAPE_DOMAIN=api.takeshape.io
-TAKESHAPE_PROJECT_ID=copy from takeshape dashboard
-TAKESHAPE_API_KEY=create in takeshape project settings
+
+# Variables prefixed with PUBLIC_ are given to the client
+PUBLIC_TAKESHAPE_API_ENDPOINT=copy from takeshape dashboard
+PUBLIC_TAKESHAPE_API_KEY=create in takeshape project settings
 
 ```
 

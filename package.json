@@ -21,6 +21,7 @@
     "@remix-run/node": "^2.10.0",
     "@remix-run/react": "^2.10.0",
     "@remix-run/serve": "^2.10.0",
+    "@tanstack/react-query": "^5.49.2",
     "framer-motion": "^11.2.12",
     "html-react-parser": "^5.1.10",
     "isbot": "^4.4.0",
