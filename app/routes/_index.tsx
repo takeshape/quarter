@@ -9,7 +9,7 @@ import { ConfigContext } from "../root.tsx";
 import { ErrorMessage } from "../components/error-message.tsx";
 
 const query = `
-query ($input:String!, $sessionId: String) {
+mutation ($input:String!, $sessionId: String) {
   chat(input:$input, sessionId: $sessionId) {
     content
     sessionId
