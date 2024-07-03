@@ -1,10 +1,12 @@
 import { Button, CircularProgress, Navbar } from "@nextui-org/react";
 import {Input} from "@nextui-org/input";
 import React from "react";
-import { Form, json, useActionData } from "@remix-run/react";
-import { ActionFunction } from "@remix-run/node";
+import { Form } from "@remix-run/react";
 import { LLMOutput } from "../components/llm-output.tsx";
 import { ChatBubble } from "../components/chat-bubble.tsx";
+import { useMutation } from "@tanstack/react-query";
+import { ConfigContext } from "../root.tsx";
+import { ErrorMessage } from "../components/error-message.tsx";
 
 const query = `
 query ($input:String!, $sessionId: String) {
@@ -15,91 +17,59 @@ query ($input:String!, $sessionId: String) {
 }
 `;
 
-type ActionResponse = {
-  success: boolean;
-  output?: {
-    chat: {
-      content: string;
-      sessionId: string;
-    }
-  } | null;
-  isStreamFinished?: boolean;
-  error?: string;
-}
-
-export const action: ActionFunction = async ({request}) => {
-  const formData = await request.formData();
-
-  const takeshapeDomain = process.env.TAKESHAPE_DOMAIN;
-  if (!takeshapeDomain) {
-    throw new Error('TAKESHAPE_DOMAIN must be set');
-  }
-
-  const projectId = process.env.TAKESHAPE_PROJECT_ID;
-  if (!projectId) {
-    throw new Error('TAKESHAPE_PROJECT_ID must be set');
-  }
-
-  const apiKey = process.env.TAKESHAPE_API_KEY;
-  if (!apiKey) {
-    throw new Error('TAKESHAPE_API_KEY must be set');
-  }
-
-  const message = formData.get('message');
-  const sessionId = formData.get('sessionId');
-
-  if (message === null) {
-    return json({
-      success: true,
-      output: null,
-      isStreamFinished: true
-    })
-  }
-
-  const response = await fetch(`https://${takeshapeDomain}/project/${projectId}/graphql`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      query,
-      variables: {
-        input: message,
-        sessionId: sessionId === '' ? undefined : sessionId
-      }
-    })
-  });
-
-  if (response.status !== 200) {
-    console.error(response);
-    return json({success: false, error: `HTTP Status Code ${response.status}`});
-  }
-
-  const responseJson = await response.json();
-
-  if (responseJson.errors?.length > 0) {
-    console.error(response);
-    return json({success: false, error: responseJson.errors[0].message});
-  }
-
-  const result = { success: true, output: responseJson.data, isStreamFinished: true };
-
-  return json(result);
-};
-
 export default function Demo() {
-  const data = useActionData<ActionResponse>();
-
-  const sessionId = data?.output?.chat?.sessionId ?? '';
-  const output = data?.output?.chat?.content ?? '';
-  const isStreamFinished = data?.isStreamFinished;
+  const config = React.useContext(ConfigContext);
   
+  const sessionIdRef = React.useRef<string | undefined>();
   const [inputText, setInputText] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [history, setHistory] = React.useState([]);
 
   const scrolledToBottomRef = React.useRef(true);
+
+  const {data, error, mutate} = useMutation({
+    mutationFn: async (variables: {input: string, sessionId?: string}) => {
+      const result = await fetch(config.takeshapeApiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.takeshapeApiKey}`
+        },
+        body: JSON.stringify({
+          query,
+          variables
+        })
+      });
+      const json = await result.json();
+      console.log('json', json);
+
+      if (json.errors?.length > 0) {
+        throw new Error(json.errors[0].message);
+      }
+      
+      sessionIdRef.current = json.data.chat?.sessionId;
+
+      return {
+        isStreamFinished: true,
+        output: json.data
+      };
+    },
+    onSuccess: () => {
+      setLoading(false);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+      handleScroll();
+      if (scrolledToBottomRef.current) {
+        window.setTimeout(() => {
+          window.scrollTo(0, document.body.scrollHeight);
+        }, 0);
+      }
+    }
+  });
+
+  const output = data?.output?.chat?.content ?? '';
+  const isStreamFinished = data?.isStreamFinished;
 
   const handleScroll = React.useCallback(() => {
     const scrollTop = window.scrollY;
@@ -120,27 +90,14 @@ export default function Demo() {
   }, []);
 
   React.useEffect(() => {
-    setLoading(false);
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
-    handleScroll();
-    if (scrolledToBottomRef.current) {
-      window.setTimeout(() => {
-        window.scrollTo(0, document.body.scrollHeight);
-      }, 0);
-    }
-  }, [data]);
-
-  React.useEffect(() => {
     window.scrollTo(0, document.body.scrollHeight);
   }, [history]);
 
   const inputRef = React.useRef(null);
 
   const submitChat = React.useCallback((event) => {
+    event.preventDefault();
     if (inputText.trim() === '') {
-      event.preventDefault();
       return;
     }
     setLoading(true);
@@ -158,14 +115,18 @@ export default function Demo() {
     });
     setInputText('');
     setHistory(newHistory);
+    mutate({
+      input: inputText,
+      sessionId: sessionIdRef.current
+    });
   }, [inputText]);
 
   const changeMessage = React.useCallback((e) => {
     setInputText(e.target.value);
   }, []);
 
-  if (data?.success === false) {
-    return <div className={`mx-auto px-4 max-w-2xl text-red-600`}>{data.error}</div>
+  if (error) {
+    return <ErrorMessage>{error.message}</ErrorMessage>
   }
 
   return (
@@ -181,8 +142,7 @@ export default function Demo() {
         {loading && <div className="flex justify-center mt-8"><CircularProgress/></div>}
       </div>
       <Navbar className={`bg-input-bg fixed bottom-0 top-auto item h-32`} isBlurred={false}>
-        <Form method="post" className="w-full" onSubmit={submitChat}>
-          <input type="hidden" name="sessionId" value={sessionId} />
+        <Form className="w-full" onSubmit={submitChat}>
           <Input
             name="message"
             size="lg"

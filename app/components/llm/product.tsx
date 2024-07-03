@@ -1,7 +1,9 @@
 import { type LLMOutputComponent } from "@llm-ui/react";
-import { Button, Card, CardFooter, CircularProgress, Image } from "@nextui-org/react";
+import { Button, Card, CardFooter, CircularProgress, Image, Skeleton } from "@nextui-org/react";
 import productExample from "../../images/product-example.png";
 import { useQuery } from "@tanstack/react-query";
+import React from "react";
+import { ConfigContext } from "../../root.tsx";
 
 // TODO
 const query = `
@@ -26,20 +28,51 @@ type ProductResult = {
 
 export const Product: LLMOutputComponent = ({ blockMatch }) => {
   const productId = blockMatch.outputRaw;
+  const config = React.useContext(ConfigContext)
 
-  const {data} = useQuery<ProductResult>({
-    queryKey: [productId],
+  const {data, isError} = useQuery<ProductResult>({
+    queryKey: ['product', productId],
     queryFn: async () => {
-      // todo
+      const result = await fetch(config.takeshapeApiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.takeshapeApiKey}`
+        },
+        body: JSON.stringify({
+          query,
+          variables: {
+            id: productId
+          }
+        })
+      });
+      const json = await result.json();
+      console.log('json', json);
+      return json.data.Shopify_product;
     },
-    
-  })
+  });
 
-  console.log('blockMatch', data);
-  // console.log('data', data);
+  if (isError) {
+    return <>Error fetching product details</>;
+  }
 
   if (!data) {
-    return <CircularProgress />;
+    return <Card className="w-[200px] space-y-5 p-4" radius="lg">
+    <Skeleton className="rounded-lg">
+      <div className="h-24 rounded-lg bg-default-300"></div>
+    </Skeleton>
+    <div className="space-y-3">
+      <Skeleton className="w-3/5 rounded-lg">
+        <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
+      </Skeleton>
+      <Skeleton className="w-4/5 rounded-lg">
+        <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
+      </Skeleton>
+      <Skeleton className="w-2/5 rounded-lg">  
+        <div className="h-3 w-2/5 rounded-lg bg-default-300"></div>
+      </Skeleton>
+    </div>
+  </Card>;
   }
 
   return <Card isFooterBlurred className="w-ful h-64 my-4">

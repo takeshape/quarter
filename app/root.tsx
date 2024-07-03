@@ -18,29 +18,55 @@ import logo from "./images/logo.png";
 import logoDark from "./images/logo-dark.png";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false
+    },
+  },
+})
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: tailwindStyles },
   { rel: "stylesheet", href: markdownStyles },
 ];
 
-export type LoaderData = {
+export type Config = {
+  takeshapeApiEndpoint: string;
+  takeshapeApiKey: string;
+}
+
+type LoaderData = {
   theme: Theme | null;
+  config: Config
 };
+
+const loadEnv = (name: string) => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} must be set`);
+  }
+  return value;
+}
 
 export const loader: LoaderFunction = async ({ request }) => {
   const themeSession = await getThemeSession(request);
 
   const data: LoaderData = {
     theme: themeSession.getTheme(),
+    config: {
+      takeshapeApiEndpoint: loadEnv('PUBLIC_TAKESHAPE_API_ENDPOINT'),
+      takeshapeApiKey: loadEnv('PUBLIC_TAKESHAPE_API_KEY')
+    }
   };
 
   return data;
 };
 
+export const ConfigContext = React.createContext<Config>(null);
+
 export default function App() {
-  const {theme} = useLoaderData<LoaderData>();
+  const {theme, config} = useLoaderData<LoaderData>();
 
   return (
     <html className={`h-full text-foreground ${theme}`}>
@@ -54,30 +80,32 @@ export default function App() {
         <ThemeScript ssrTheme={Boolean(theme)}/>
       </head>
       <body >
-        <NextUIProvider>
-          <ThemeProvider specifiedTheme={theme}>
-            <QueryClientProvider client={queryClient}>
-              <Navbar  className="bg-transparent">
-                <NavbarBrand>
-                  <img src={theme === 'light' ? logo : logoDark} alt="Valvoline" className="h-16"/>
-                </NavbarBrand>
-                <NavbarContent className="hidden sm:flex gap-4" justify="center">
-                  <MainNavItem text="Demo" to="/" />
-                  <MainNavItem text="How It Works" to="/about" />
-                </NavbarContent>
-                <NavbarContent justify="end">
-                  <NavbarItem>
-                    <DarkModeButton />
-                  </NavbarItem>
-                </NavbarContent>
-              </Navbar>
-              <div className="mt-4">
-                <Outlet />
-              </div>
-              <Scripts />
-            </QueryClientProvider>
-          </ThemeProvider>
-        </NextUIProvider>
+        <ConfigContext.Provider value={config}>
+          <NextUIProvider>
+            <ThemeProvider specifiedTheme={theme}>
+              <QueryClientProvider client={queryClient}>
+                <Navbar  className="bg-transparent">
+                  <NavbarBrand>
+                    <img src={theme === 'light' ? logo : logoDark} alt="Valvoline" className="h-16"/>
+                  </NavbarBrand>
+                  <NavbarContent className="hidden sm:flex gap-4" justify="center">
+                    <MainNavItem text="Demo" to="/" />
+                    <MainNavItem text="How It Works" to="/about" />
+                  </NavbarContent>
+                  <NavbarContent justify="end">
+                    <NavbarItem>
+                      <DarkModeButton />
+                    </NavbarItem>
+                  </NavbarContent>
+                </Navbar>
+                <div className="mt-4">
+                  <Outlet />
+                </div>
+                <Scripts />
+              </QueryClientProvider>
+            </ThemeProvider>
+          </NextUIProvider>
+        </ConfigContext.Provider>
       </body>
     </html>
   );
