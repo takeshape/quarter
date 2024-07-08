@@ -110,6 +110,10 @@ export default function Demo() {
     const amountToShow = Math.ceil(welcome.length * (welcomeProgress / 100));
     return welcome.substring(0, amountToShow);
   }, [welcome, welcomeProgress]);
+  
+  const isWelcomeFinished = React.useMemo(() => {
+    return welcomeProgress === 100;
+  }, [welcomeProgress]);
 
   const inputRef = React.useRef(null);
 
@@ -150,7 +154,7 @@ export default function Demo() {
   return (
     <>
       <div className={`mx-auto px-4 max-w-2xl pb-36`}>
-      <LLMOutput llmOutput={welcomeMessage} isStreamFinished={true}/>
+      <LLMOutput llmOutput={welcomeMessage} isStreamFinished={isWelcomeFinished}/>
         {history.map((item, index) => 
           <div key={`item-${index}`}>
             {item.type === 'user' && <ChatBubble text={item.value}/>}
