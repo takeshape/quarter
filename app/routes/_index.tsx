@@ -17,6 +17,8 @@ mutation ($input:String!, $sessionId: String) {
 }
 `;
 
+const welcome = 'I can find compatible products for your vehicle. Please enter what you\'re looking for and your vehicle\'s year, make, and model.';
+
 export default function Demo() {
   const config = React.useContext(ConfigContext);
   
@@ -24,6 +26,7 @@ export default function Demo() {
   const [inputText, setInputText] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [history, setHistory] = React.useState([]);
+  const [welcomeProgress, setWelcomeProgress] = React.useState(0);
 
   const scrolledToBottomRef = React.useRef(true);
 
@@ -93,6 +96,21 @@ export default function Demo() {
     window.scrollTo(0, document.body.scrollHeight);
   }, [history]);
 
+  React.useEffect(() => {
+    if (welcomeProgress < 100) {
+      const timeout = setTimeout(() => {
+        setWelcomeProgress(prev => prev + 2);
+      }, 10);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [welcomeProgress]);
+
+  const welcomeMessage = React.useMemo(() => {
+    const amountToShow = Math.ceil(welcome.length * (welcomeProgress / 100));
+    return welcome.substring(0, amountToShow);
+  }, [welcome, welcomeProgress]);
+
   const inputRef = React.useRef(null);
 
   const submitChat = React.useCallback((event) => {
@@ -132,6 +150,7 @@ export default function Demo() {
   return (
     <>
       <div className={`mx-auto px-4 max-w-2xl pb-36`}>
+      <LLMOutput llmOutput={welcomeMessage} isStreamFinished={true}/>
         {history.map((item, index) => 
           <div key={`item-${index}`}>
             {item.type === 'user' && <ChatBubble text={item.value}/>}
