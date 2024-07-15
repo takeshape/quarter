@@ -43,13 +43,18 @@ export default function Demo() {
           variables
         })
       });
+
+      if (result.status !== 200) {
+        throw new Error(`Status code ${result.status}`);
+      }
+
       const json = await result.json();
 
       if (json.errors?.length > 0) {
         throw new Error(json.errors[0].message);
       }
       
-      sessionIdRef.current = json.data.chat?.sessionId;
+      sessionIdRef.current = json.data?.chat?.sessionId;
 
       return {
         isStreamFinished: true,
