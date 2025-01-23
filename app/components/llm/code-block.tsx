@@ -13,7 +13,7 @@ import { getHighlighterCore } from "shiki/core";
 import { bundledLanguagesInfo } from "shiki/langs";
 
 import getWasm from "shiki/wasm";
-import { Code } from "@nextui-org/react";
+import { Code } from "@heroui/react";
 import { useTheme } from "../../utils/theme-provider.jsx";
 
 const highlighter = loadHighlighter(
