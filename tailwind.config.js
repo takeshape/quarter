@@ -1,17 +1,17 @@
 // tailwind.config.js
-const {nextui} = require("@nextui-org/theme");
+const {heroui} = require("@heroui/react");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     './app/**/*.{js,jsx,ts,tsx}',
-    "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {},
   },
   darkMode: "class",
-  plugins: [nextui({
+  plugins: [heroui({
     themes: {
       light: {
         colors: {

@@ -6,7 +6,7 @@ import {
   Scripts,
   useLoaderData
 } from "@remix-run/react";
-import {Navbar, NavbarBrand, NavbarContent, NavbarItem, NextUIProvider} from "@nextui-org/react"
+import {Navbar, NavbarBrand, NavbarContent, NavbarItem, HeroUIProvider} from "@heroui/react";
 import type { LinksFunction, LoaderFunction } from "@remix-run/node";
 import { ThemeScript, ThemeProvider, Theme } from "./utils/theme-provider.jsx";
 import { DarkModeButton } from "./components/dark-mode-button.jsx";
@@ -34,6 +34,7 @@ export const links: LinksFunction = () => [
 export type Config = {
   takeshapeApiEndpoint: string;
   takeshapeApiKey: string;
+  takeshapeApiMutationName: string;
 }
 
 type LoaderData = {
@@ -41,7 +42,7 @@ type LoaderData = {
   config: Config
 };
 
-const loadEnv = (name: string) => {
+export const loadEnv = (name: string) => {
   const value = process.env[name];
   if (!value) {
     throw new Error(`${name} must be set`);
@@ -56,7 +57,8 @@ export const loader: LoaderFunction = async ({ request }) => {
     theme: themeSession.getTheme(),
     config: {
       takeshapeApiEndpoint: loadEnv('PUBLIC_TAKESHAPE_API_ENDPOINT'),
-      takeshapeApiKey: loadEnv('PUBLIC_TAKESHAPE_API_KEY')
+      takeshapeApiKey: loadEnv('PUBLIC_TAKESHAPE_API_KEY'),
+      takeshapeApiMutationName: loadEnv('PUBLIC_TAKESHAPE_API_MUTATION_NAME')
     }
   };
 
@@ -81,7 +83,7 @@ export default function App() {
       </head>
       <body >
         <ConfigContext.Provider value={config}>
-          <NextUIProvider>
+          <HeroUIProvider>
             <ThemeProvider specifiedTheme={theme}>
               <QueryClientProvider client={queryClient}>
                 <Navbar  className="bg-transparent">
@@ -90,7 +92,7 @@ export default function App() {
                   </NavbarBrand>
                   <NavbarContent className="hidden sm:flex gap-4" justify="center">
                     <MainNavItem text="Demo" to="/" />
-                    <MainNavItem text="How It Works" to="/about" />
+                    <MainNavItem text="Settings" to="/settings" />
                   </NavbarContent>
                   <NavbarContent justify="end">
                     <NavbarItem>
@@ -104,7 +106,7 @@ export default function App() {
                 <Scripts />
               </QueryClientProvider>
             </ThemeProvider>
-          </NextUIProvider>
+          </HeroUIProvider>
         </ConfigContext.Provider>
       </body>
     </html>

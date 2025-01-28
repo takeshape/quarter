@@ -1,37 +1,36 @@
-import { Button, CircularProgress, Navbar } from "@nextui-org/react";
-import {Input} from "@nextui-org/input";
-import React from "react";
+import { Button, CircularProgress, Navbar, Input } from "@heroui/react";
+import React, { useMemo } from "react";
 import { Form } from "@remix-run/react";
 import { LLMOutput } from "../components/llm-output.tsx";
 import { ChatBubble } from "../components/chat-bubble.tsx";
 import { useMutation } from "@tanstack/react-query";
 import { ConfigContext } from "../root.tsx";
 import { ErrorMessage } from "../components/error-message.tsx";
-
-const query = `
-mutation ($input:String!, $sessionId: String) {
-  chat(input:$input, sessionId: $sessionId) {
-    content
-    sessionId
-  }
-}
-`;
-
-const welcome = 'I can find compatible products for your vehicle. Please enter what you\'re looking for and your vehicle\'s year, make, and model.';
+import { useSettingsStore } from "../store.ts";
 
 export default function Demo() {
   const config = React.useContext(ConfigContext);
-  
+  const email = useSettingsStore(state => state.email);
   const sessionIdRef = React.useRef<string | undefined>();
   const [inputText, setInputText] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [history, setHistory] = React.useState([]);
   const [welcomeProgress, setWelcomeProgress] = React.useState(0);
+  const [welcome, setWelcome] = React.useState<null | string>(null);
 
   const scrolledToBottomRef = React.useRef(true);
 
+  const query = useMemo(() => {
+    return `mutation ($input:String!, $sessionId: String, $email: String) {
+  ${config.takeshapeApiMutationName}(input:$input, sessionId: $sessionId, email: $email) {
+    content
+    sessionId
+  }
+}`
+  }, []);
+
   const {data, error, mutate} = useMutation({
-    mutationFn: async (variables: {input: string, sessionId?: string}) => {
+    mutationFn: async (variables: {input: string, sessionId?: string, email?: string}) => {
       const result = await fetch(config.takeshapeApiEndpoint, {
         method: 'POST',
         headers: {
@@ -54,7 +53,7 @@ export default function Demo() {
         throw new Error(json.errors[0].message);
       }
       
-      sessionIdRef.current = json.data?.chat?.sessionId;
+      sessionIdRef.current = json.data?.[config.takeshapeApiMutationName]?.sessionId;
 
       return {
         isStreamFinished: true,
@@ -75,7 +74,7 @@ export default function Demo() {
     }
   });
 
-  const output = data?.output?.chat?.content ?? '';
+  const output = data?.output?.[config.takeshapeApiMutationName]?.content ?? '';
   const isStreamFinished = data?.isStreamFinished;
 
   const handleScroll = React.useCallback(() => {
@@ -90,6 +89,21 @@ export default function Demo() {
     }
   }, []);
 
+  // Send initial message if email is known
+  // Note that the email can be initially empty when it's about to be pulled from localstorage
+  React.useEffect(() => {
+    if (email && email.length > 0) {
+      mutate({
+        input: 'Please let me know if my fitment data is available and let me know my options.',
+        email
+      });
+      setLoading(true);
+      setWelcome('Checking if you have fitment data in your profile...');
+    } else {
+      setWelcome('I can find compatible products for your vehicle. Begin by entering your vehicle\'s year, make, and model. Alternately you can enter your VIN.');
+    }
+  }, [email]);
+
   React.useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => {
@@ -102,23 +116,23 @@ export default function Demo() {
   }, [history]);
 
   React.useEffect(() => {
-    if (welcomeProgress < 100) {
+    if (welcome && welcomeProgress < 100) {
       const timeout = setTimeout(() => {
         setWelcomeProgress(prev => prev + 2);
       }, 10);
 
       return () => clearTimeout(timeout);
     }
-  }, [welcomeProgress]);
+  }, [welcomeProgress, welcome]);
 
   const welcomeMessage = React.useMemo(() => {
-    const amountToShow = Math.ceil(welcome.length * (welcomeProgress / 100));
-    return welcome.substring(0, amountToShow);
-  }, [welcome, welcomeProgress]);
+    const amountToShow = welcome ? Math.ceil(welcome.length * (welcomeProgress / 100)) : 0;
+    return welcome ? welcome.substring(0, amountToShow) : null;
+  }, [welcome, welcomeProgress, welcome]);
   
   const isWelcomeFinished = React.useMemo(() => {
-    return welcomeProgress === 100;
-  }, [welcomeProgress]);
+    return welcome && welcomeProgress === 100;
+  }, [welcomeProgress, welcome]);
 
   const inputRef = React.useRef(null);
 
@@ -144,7 +158,8 @@ export default function Demo() {
     setHistory(newHistory);
     mutate({
       input: inputText,
-      sessionId: sessionIdRef.current
+      sessionId: sessionIdRef.current,
+      email: email ? email : undefined
     });
   }, [inputText]);
 
@@ -159,7 +174,7 @@ export default function Demo() {
   return (
     <>
       <div className={`mx-auto px-4 max-w-2xl pb-36`}>
-      <LLMOutput llmOutput={welcomeMessage} isStreamFinished={isWelcomeFinished}/>
+      {welcome && <LLMOutput llmOutput={welcomeMessage} isStreamFinished={isWelcomeFinished}/>}
         {history.map((item, index) => 
           <div key={`item-${index}`}>
             {item.type === 'user' && <ChatBubble text={item.value}/>}
@@ -167,7 +182,7 @@ export default function Demo() {
           </div>
         )}
         {!loading && <LLMOutput llmOutput={output} isStreamFinished={isStreamFinished}/>}
-        {loading && <div className="flex justify-center mt-8"><CircularProgress/></div>}
+        {loading && !(welcome && !isWelcomeFinished) && <div className="flex justify-center mt-8"><CircularProgress/></div>}
       </div>
       <Navbar className={`bg-input-bg fixed bottom-0 top-auto item h-32`} isBlurred={false}>
         <Form className="w-full" onSubmit={submitChat}>

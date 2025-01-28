@@ -14,22 +14,23 @@
   "author": "TakeShape",
   "license": "MIT",
   "dependencies": {
+    "@heroui/react": "^2.6.14",
     "@llm-ui/code": "^0.13.3",
     "@llm-ui/markdown": "^0.13.3",
     "@llm-ui/react": "^0.13.3",
-    "@nextui-org/react": "^2.4.2",
     "@remix-run/node": "^2.10.0",
     "@remix-run/react": "^2.10.0",
     "@remix-run/serve": "^2.10.0",
     "@tanstack/react-query": "^5.49.2",
-    "framer-motion": "^11.2.12",
+    "framer-motion": "^11.18.2",
     "html-react-parser": "^5.1.10",
     "isbot": "^4.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
-    "shiki": "^1.9.1"
+    "shiki": "^1.9.1",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.10.0",

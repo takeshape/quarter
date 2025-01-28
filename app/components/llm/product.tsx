@@ -1,5 +1,5 @@
 import { type LLMOutputComponent } from "@llm-ui/react";
-import { Button, Card, CardBody, Image, Skeleton } from "@nextui-org/react";
+import { Button, Card, CardBody, Image, Skeleton } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { ConfigContext } from "../../root.tsx";
@@ -53,11 +53,7 @@ export const Product: LLMOutputComponent = ({ blockMatch }) => {
     return <>Error fetching product details</>;
   }
   
-  return <Card
-    isBlurred
-    className="border-none bg-background/60 dark:bg-default-100/50 w-full my-4 h-50"
-    shadow="sm"
-  >
+  return <Card className="border-none bg-background/60 dark:bg-default-100/50 w-full my-4 h-50">
     <CardBody>
       <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center">
         <div className="relative col-span-6 md:col-span-4">
